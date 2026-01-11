@@ -1,0 +1,5 @@
+DATA_DIR = 'data/clusterdata-2011-2/'
+OUTPUT_DIR = 'output/'
+SCHEMA_DICT_PATH = OUTPUT_DIR + 'schema_dict.json'
+LOGS_DIR = 'logs/'
+TMP_DIR = 'tmp/'

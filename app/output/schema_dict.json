@@ -1,0 +1,224 @@
+{
+    "job_events": {
+        "col_content": [
+            "time",
+            "missing_info",
+            "job_ID",
+            "event_type",
+            "user",
+            "scheduling_class",
+            "job_name",
+            "logical_job_name"
+        ],
+        "col_format": [
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "STRING_HASH",
+            "INTEGER",
+            "STRING_HASH",
+            "STRING_HASH"
+        ],
+        "col_mandatory": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+        ]
+    },
+    "task_events": {
+        "col_content": [
+            "time",
+            "missing_info",
+            "job_ID",
+            "task_index",
+            "machine_ID",
+            "event_type",
+            "user",
+            "scheduling_class",
+            "priority",
+            "CPU_request",
+            "memory_request",
+            "disk_space_request",
+            "different_machines_restriction"
+        ],
+        "col_format": [
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "STRING_HASH",
+            "INTEGER",
+            "INTEGER",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "BOOLEAN"
+        ],
+        "col_mandatory": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+        ]
+    },
+    "machine_events": {
+        "col_content": [
+            "time",
+            "machine_ID",
+            "event_type",
+            "platform_ID",
+            "CPUs",
+            "Memory"
+        ],
+        "col_format": [
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "STRING_HASH",
+            "FLOAT",
+            "FLOAT"
+        ],
+        "col_mandatory": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+        ]
+    },
+    "machine_attributes": {
+        "col_content": [
+            "time",
+            "machine_ID",
+            "attribute_name",
+            "attribute_value",
+            "attribute_deleted"
+        ],
+        "col_format": [
+            "INTEGER",
+            "INTEGER",
+            "STRING_HASH",
+            "STRING_HASH_OR_INTEGER",
+            "BOOLEAN"
+        ],
+        "col_mandatory": [
+            1,
+            1,
+            1,
+            0,
+            1
+        ]
+    },
+    "task_constraints": {
+        "col_content": [
+            "time",
+            "job_ID",
+            "task_index",
+            "comparison_operator",
+            "attribute_name",
+            "attribute_value"
+        ],
+        "col_format": [
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "STRING_HASH",
+            "STRING_HASH_OR_INTEGER"
+        ],
+        "col_mandatory": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+        ]
+    },
+    "task_usage": {
+        "col_content": [
+            "start_time",
+            "end_time",
+            "job_ID",
+            "task_index",
+            "machine_ID",
+            "CPU_rate",
+            "canonical_memory_usage",
+            "assigned_memory_usage",
+            "unmapped_page_cache",
+            "total_page_cache",
+            "maximum_memory_usage",
+            "disk_I/O_time",
+            "local_disk_space_usage",
+            "maximum_CPU_rate",
+            "maximum_disk_IO_time",
+            "cycles_per_instruction",
+            "memory_accesses_per_instruction",
+            "sample_portion",
+            "aggregation_type",
+            "sampled_CPU_usage"
+        ],
+        "col_format": [
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "INTEGER",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "FLOAT",
+            "BOOLEAN",
+            "FLOAT"
+        ],
+        "col_mandatory": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ]
+    }
+}

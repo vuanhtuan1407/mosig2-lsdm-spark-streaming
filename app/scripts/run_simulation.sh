@@ -1,0 +1,1 @@
+python3 src/simulation.py --rate 2.0
