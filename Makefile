@@ -1,20 +1,10 @@
-# Default scale values (can be overridden via CLI)
-KAFKA_SCALE ?= 1
-SPARK_WORKER_SCALE ?= 2
-
-# Start environment normally (with scale)
+# Start environment normally
 up:
-	docker compose up -d \
-		--scale kafka=$(KAFKA_SCALE) \
-		--scale spark-worker=$(SPARK_WORKER_SCALE) \
-		--remove-orphans
+	docker compose up -d --remove-orphans
 
-# Start and force recreate (with scale)
+# Start and force recreate
 up-force:
-	docker compose up -d --force-recreate \
-		--scale kafka=$(KAFKA_SCALE) \
-		--scale spark-worker=$(SPARK_WORKER_SCALE) \
-		--remove-orphans
+	docker compose up -d --force-recreate --remove-orphans
 
 # Stop and remove services + volumes
 down:
