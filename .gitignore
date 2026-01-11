@@ -21,19 +21,11 @@ Thumbs.db
 *.bak
 
 **/data/*
-!**/data/.gitkeep
-
 **/logs/*
-!**/logs/.gitkeep
-
 **/log/*
-!**/log/.gitkeep
-
 **/tmp/*
-!**/tmp/.gitkeep
-
 **/checkpoints/*
-!**/checkpoints/.gitkeep
+!**/.gitkeep
 
 spark-warehouse/
 metastore_db/
@@ -42,7 +34,6 @@ derby.log
 *.orc
 
 **/opt/ivy2/*
-!**/opt/ivy2/.gitkeep
 .ivy2/
 .m2/
 .cache/
