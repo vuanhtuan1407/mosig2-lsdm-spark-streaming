@@ -1,7 +1,7 @@
 import json
 import time
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, col, window, concat_ws, avg, sum, count, max, when
+from pyspark.sql.functions import split, col, window, concat_ws, count, sum, when, date_format
 from pyspark.sql.types import FloatType, BooleanType, StringType, TimestampType, LongType
 import configs
 
@@ -48,71 +48,55 @@ for i, (c, t) in enumerate(zip(task_cols, col_types)):
 # Convert milliseconds timestamp to TimestampType
 df_parsed = df_parsed.withColumn("time_ts", (col("time") / 1000).cast(TimestampType()))
 
-# Calculate metrics
-metrics_df = df_parsed.withWatermark("time_ts", "2 seconds") \
+# Filter out NULL machine_ID and job_ID
+df_parsed_clean = df_parsed.filter(
+    col("machine_ID").isNotNull() & col("job_ID").isNotNull()
+)
+
+# Calculate simplified metrics
+metrics_df = df_parsed_clean.withWatermark("time_ts", "30 seconds") \
     .groupBy(
-        window(col("time_ts"), "5 seconds", "1 second"),
+        window(col("time_ts"), "2 minutes", "30 seconds"),
         col("machine_ID"),
         col("job_ID")
     ) \
     .agg(
         count("*").alias("total_events"),
         
-        # Count by event type
-        sum(when(col("event_type") == configs.EVENT_TYPE["SUBMIT"], 1).otherwise(0)).alias("submit_count"),
-        sum(when(col("event_type") == configs.EVENT_TYPE["SCHEDULE"], 1).otherwise(0)).alias("schedule_count"),
-        sum(when(col("event_type") == configs.EVENT_TYPE["EVICT"], 1).otherwise(0)).alias("evict_count"),
+        # Count fail events (FAIL + EVICT + KILL)
         sum(when(col("event_type") == configs.EVENT_TYPE["FAIL"], 1).otherwise(0)).alias("fail_count"),
-        sum(when(col("event_type") == configs.EVENT_TYPE["FINISH"], 1).otherwise(0)).alias("finish_count"),
-        sum(when(col("event_type") == configs.EVENT_TYPE["KILL"], 1).otherwise(0)).alias("kill_count"),
-        
-        # Resource metrics
-        avg("CPU_request").alias("avg_cpu_request"),
-        avg("memory_request").alias("avg_memory_request"),
-        max("CPU_request").alias("max_cpu_request"),
-        max("memory_request").alias("max_memory_request")
+        sum(when(col("event_type") == configs.EVENT_TYPE["EVICT"], 1).otherwise(0)).alias("evict_count"),
+        sum(when(col("event_type") == configs.EVENT_TYPE["KILL"], 1).otherwise(0)).alias("kill_count")
     ) \
-    .selectExpr(
-        "CAST(window.start AS TIMESTAMP) as window_start",
-        "CAST(window.end AS TIMESTAMP) as window_end",
-        "machine_ID",
-        "job_ID",
-        "total_events",
-        "submit_count",
-        "schedule_count",
-        "evict_count",
-        "fail_count",
-        "finish_count",
-        "kill_count",
-        "avg_cpu_request",
-        "avg_memory_request",
-        "max_cpu_request",
-        "max_memory_request"
+    .select(
+        date_format(col("window.start"), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").alias("window_start"),
+        date_format(col("window.end"), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").alias("window_end"),
+        col("machine_ID"),
+        col("job_ID"),
+        col("total_events"),
+        col("fail_count"),
+        col("evict_count"),
+        col("kill_count")
     )
 
-# Calculate derived metrics
+# Calculate total fail count and fail rate
 metrics_df = metrics_df.withColumn(
-    "failure_count", col("fail_count") + col("evict_count") + col("kill_count")
+    "total_fail_count", col("fail_count") + col("evict_count") + col("kill_count")
 ).withColumn(
-    "success_count", col("finish_count")
-).withColumn(
-    "failure_rate", 
-    when(col("total_events") > 0, col("failure_count") / col("total_events")).otherwise(0)
-).withColumn(
-    "success_rate",
-    when(col("total_events") > 0, col("success_count") / col("total_events")).otherwise(0)
+    "fail_rate",
+    when(col("total_events") > 0, col("total_fail_count") / col("total_events")).otherwise(0)
 )
 
-# Add document ID
+# Add document ID (handle potential NULL values)
 metrics_with_id = metrics_df.withColumn(
     "doc_id",
-    concat_ws("_", 
-              col("window_start").cast("string"), 
-              col("machine_ID").cast("string"),
-              col("job_ID").cast("string"))
+    concat_ws("_",
+              col("window_start"),
+              when(col("machine_ID").isNotNull(), col("machine_ID").cast("string")).otherwise("null"),
+              when(col("job_ID").isNotNull(), col("job_ID").cast("string")).otherwise("null"))
 )
 
-# Write to Elasticsearch each second
+# Write to Elasticsearch
 query = metrics_with_id.writeStream \
     .format("org.elasticsearch.spark.sql") \
     .option("checkpointLocation", f"/tmp/spark/checkpoint_metrics_{int(time.time())}") \
@@ -120,6 +104,7 @@ query = metrics_with_id.writeStream \
     .option("es.port", "9200") \
     .option("es.resource", f"{configs.ES_TASK_EVENT_INDEX}_metrics") \
     .option("es.mapping.id", "doc_id") \
+    .option("es.mapping.date.rich", "true") \
     .option("es.batch.size.entries", "1000") \
     .option("es.batch.size.bytes", "1mb") \
     .outputMode("update") \

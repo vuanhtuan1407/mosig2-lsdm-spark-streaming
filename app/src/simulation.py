@@ -68,7 +68,6 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     sim = TaskEventSimulator()
-    open(configs.LOGS_DIR + "task_events_logs.csv", "w").close()  # Clear previous logs
     for log in sim.stream(rate=args.rate):
         df = pd.DataFrame([log])
         df.to_csv(configs.LOGS_DIR + "task_events_logs.csv", mode='a', header=False, index=False)

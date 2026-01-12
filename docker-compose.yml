@@ -82,7 +82,8 @@ services:
     volumes:
       - ./app:/workspace/app
     working_dir: /workspace/app
-    command: tail -f /dev/null
+    command: >
+      sh -c "pip install -r requirements.txt && tail -f /dev/null"
     environment:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=cluster-metrics

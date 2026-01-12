@@ -15,15 +15,33 @@ def delivery_report(err, msg):
         print(f"[ERROR] Delivery failed: {err} for message at offset {msg.offset()}")
 
 def tail_f(file_path):
-    """Generator function that yields new lines added to a file in real-time."""
-    with open(file_path, "r") as f:
-        f.seek(0, os.SEEK_END)
-        while True:
-            line = f.readline()
-            if not line:
+    current_file = None
+
+    while True:
+        try:
+            # If file not open yet, try to open it
+            if current_file is None:
+                if os.path.exists(file_path):
+                    current_file = open(file_path, "r")
+                    current_file.seek(0, os.SEEK_END)  # Start from end
+                    print(f"[INFO] Opened log file: {file_path}")
+                else:
+                    time.sleep(READ_INTERVAL)
+                    continue
+
+            # Read new lines
+            line = current_file.readline()
+            if line:
+                yield line.strip()
+            else:
                 time.sleep(READ_INTERVAL)
-                continue
-            yield line.strip()
+
+        except Exception as e:
+            print(f"[ERROR] Error reading file: {e}")
+            if current_file:
+                current_file.close()
+                current_file = None
+            time.sleep(READ_INTERVAL)
 
 def run_producer():
     p = Producer({"bootstrap.servers": KAFKA_BROKER})
@@ -60,3 +78,4 @@ if __name__ == "__main__":
         time.sleep(0.5)
 
     run_producer()
+    
