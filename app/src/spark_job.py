@@ -1,4 +1,5 @@
 import json
+import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import split, col, window, concat_ws, avg, sum, count, max, when
 from pyspark.sql.types import FloatType, BooleanType, StringType, TimestampType, LongType
@@ -72,8 +73,8 @@ metrics_df = df_parsed.withWatermark("time_ts", "2 seconds") \
         max("memory_request").alias("max_memory_request")
     ) \
     .selectExpr(
-        "window.start as window_start",
-        "window.end as window_end",
+        "CAST(window.start AS TIMESTAMP) as window_start",
+        "CAST(window.end AS TIMESTAMP) as window_end",
         "machine_ID",
         "job_ID",
         "total_events",
@@ -111,10 +112,10 @@ metrics_with_id = metrics_df.withColumn(
               col("job_ID").cast("string"))
 )
 
-# Write to Elasticsearch mỗi 1 giây
+# Write to Elasticsearch each second
 query = metrics_with_id.writeStream \
     .format("org.elasticsearch.spark.sql") \
-    .option("checkpointLocation", "/tmp/spark/checkpoint_metrics") \
+    .option("checkpointLocation", f"/tmp/spark/checkpoint_metrics_{int(time.time())}") \
     .option("es.nodes", "elasticsearch") \
     .option("es.port", "9200") \
     .option("es.resource", f"{configs.ES_TASK_EVENT_INDEX}_metrics") \

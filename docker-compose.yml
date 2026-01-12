@@ -18,9 +18,9 @@ services:
     expose:
       - "29092"
     environment:
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=2 # num_brokers - 1
-      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=2 # num_brokers - 1
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=2 # num_brokers - 1
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 #!
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1 #!
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=1 #!
       - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
       - KAFKA_MIN_INSYNC_REPLICAS=1
     volumes:
@@ -29,7 +29,7 @@ services:
     networks:
       - lsdm-net
     deploy:
-      replicas: 3 # Number of Kafka brokers
+      replicas: 1 # Number of Kafka brokers
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
@@ -69,7 +69,7 @@ services:
     networks:
       - lsdm-net
     deploy:
-      replicas: 3
+      replicas: 2
 
   client-app:
     build:
@@ -114,6 +114,7 @@ services:
     depends_on:
       - elasticsearch
     volumes:
+      - ./kibana/data:/usr/share/kibana/data
       - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
     networks:
       - lsdm-net
